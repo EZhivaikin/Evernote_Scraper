@@ -71,14 +71,18 @@ for notebook in notebooks:
     for note in ourNoteList.notes:
         # Получение метаданных заметок.
         note_data = note_store.getNote(note.guid, True, True, True, False)
-        print(note_data.title)
-        filename = MD_PATH + note_data.title + ".enex"
+        title = note_data.title 
+        for c in title:
+            if not(c.isalpha() or c.isdigit() or c==' '):
+                title = title.replace(c,'')
+        print(title)
+        filename = MD_PATH + title + ".enex"
         # Сохранение enex-файла и его парсинг в md.
-        if not os.path.exists(MD_PATH+note_data.title):
-            os.mkdir(MEDIA_PATH+"/"+note_data.title)
+        if not os.path.exists(MD_PATH+title):
+            os.mkdir(MEDIA_PATH+title.replace(' ','_'))
             with open(filename, 'w',  encoding='UTF-8') as fw:
                 fw.write(
-                    "<note><title>%s</title><content><![CDATA[" % note_data.title)
+                    "<note><title>%s</title><content><![CDATA[" % title)
                 fw.write(str(note_data.content))
                 fw.write("]]></content></note>")
             Enex_parser.evernote_dump.run_parse([filename], path=MD_PATH)
@@ -90,9 +94,9 @@ for notebook in notebooks:
                         objID = ET.fromstring(
                             resource.recognition.body).get('objID')
                         # Дописать в конец файла ссылки на файлы в md
-                        with open(MD_PATH+"%s/%s.md" % (note_data.title, note_data.title), 'a') as fw:
-                            # Заменяем пробелы на %20 т.к. иначе путь не считывается
-                            fw.write("\n\n[%s]:\n/%s/%s" % (objID, MEDIA_PATH +
-                                                            note_data.title.replace(' ', '%20'), resource.attributes.fileName.replace(' ', '%20')))
-                    with open("%s/%s" % (MEDIA_PATH+note_data.title, resource.attributes.fileName), 'wb') as handler:
+                        with open(MD_PATH+"%s/%s.md" % (title, title), 'a') as fw:
+                            # Заменяем пробелы на '_' т.к. иначе путь не считывается
+                            fw.write("\n\n[%s]: /%s/%s" % (objID, 'media/' +
+                                                            title.replace(' ','_'), resource.attributes.fileName.replace(' ', '_')))
+                    with open("%s/%s" % (MEDIA_PATH+title.replace(' ','_'), resource.attributes.fileName.replace(' ', '_')), 'wb') as handler:
                         handler.write(resource.data.body)
